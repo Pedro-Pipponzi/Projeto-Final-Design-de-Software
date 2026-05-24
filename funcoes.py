@@ -1,4 +1,5 @@
 import pygame
+import random
 
 pygame.init()
 
@@ -11,25 +12,62 @@ CHAO_Y = HEIGHT - 50
 GRAVIDADE = 0.8
 FPS = 60
 
-DINO_LARGURA = 40
-DINO_ALTURA_NORMAL = 60
-DINO_ALTURA_AGACHADO = 30
-dino_x = 80
-dino_bottom = CHAO_Y
-vel_y = 0
-no_chao = True
-agachado = False
-
 CACTO_LARGURA = 20
-CACTO_ALTURA = 50
-cacto_x = 600
-cacto_y = CHAO_Y - CACTO_ALTURA
+cacto_altura = 50
+cacto_vel = 6
+cacto_x = WIDTH
+cacto_y = CHAO_Y - cacto_altura
 
 fonte = pygame.font.SysFont(None, 36)
 frames = 0
 
+
+class Dinossauro(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.agachado = False
+        self.image = pygame.Surface((40, 60))
+        self.image.fill((80, 80, 80))
+        self.rect = self.image.get_rect()
+        self.rect.x = 80
+        self.rect.bottom = CHAO_Y
+        self.vel_y = 0
+        self.no_chao = True
+
+    def update(self):
+        self.vel_y += GRAVIDADE
+        self.rect.bottom += self.vel_y
+        if self.rect.bottom >= CHAO_Y:
+            self.rect.bottom = CHAO_Y
+            self.vel_y = 0
+            self.no_chao = True
+
+    def pular(self):
+        if self.no_chao and not self.agachado:
+            self.vel_y = -15
+            self.no_chao = False
+
+    def agachar(self, ativo):
+        if ativo == self.agachado or not self.no_chao:
+            return
+        self.agachado = ativo
+        antigo_x = self.rect.x
+        if ativo:
+            self.image = pygame.Surface((40, 30))
+        else:
+            self.image = pygame.Surface((40, 60))
+        self.image.fill((80, 80, 80))
+        self.rect = self.image.get_rect()
+        self.rect.x = antigo_x
+        self.rect.bottom = CHAO_Y
+
+
 clock = pygame.time.Clock()
 game = True
+
+dino = Dinossauro()
+all_sprites = pygame.sprite.Group()
+all_sprites.add(dino)
 
 while game:
     clock.tick(FPS)
@@ -38,33 +76,29 @@ while game:
         if event.type == pygame.QUIT:
             game = False
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE and no_chao and not agachado:
-                vel_y = -15
-                no_chao = False
-            if event.key == pygame.K_DOWN and no_chao:
-                agachado = True
+            if event.key == pygame.K_SPACE:
+                dino.pular()
+            if event.key == pygame.K_DOWN:
+                dino.agachar(True)
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_DOWN:
-                agachado = False
+                dino.agachar(False)
 
-    vel_y += GRAVIDADE
-    dino_bottom += vel_y
+    all_sprites.update()
 
-    if dino_bottom >= CHAO_Y:
-        dino_bottom = CHAO_Y
-        vel_y = 0
-        no_chao = True
+    cacto_x -= cacto_vel
+    if cacto_x + CACTO_LARGURA < 0:
+        cacto_x = WIDTH
+        cacto_altura = random.randint(40, 70)
+        cacto_y = CHAO_Y - cacto_altura
 
     frames += 1
     score = frames // 6
 
-    altura_atual = DINO_ALTURA_AGACHADO if agachado else DINO_ALTURA_NORMAL
-    dino_y = dino_bottom - altura_atual
-
     window.fill((255, 255, 255))
     pygame.draw.line(window, (0, 0, 0), (0, CHAO_Y), (WIDTH, CHAO_Y), 2)
-    pygame.draw.rect(window, (80, 80, 80), (dino_x, dino_y, DINO_LARGURA, altura_atual))
-    pygame.draw.rect(window, (0, 150, 0), (cacto_x, cacto_y, CACTO_LARGURA, CACTO_ALTURA))
+    all_sprites.draw(window)
+    pygame.draw.rect(window, (0, 150, 0), (cacto_x, cacto_y, CACTO_LARGURA, cacto_altura))
 
     texto = fonte.render('Score: {:05d}'.format(score), True, (0, 0, 0))
     window.blit(texto, (WIDTH - texto.get_width() - 20, 20))
@@ -72,3 +106,5 @@ while game:
     pygame.display.update()
 
 pygame.quit()
+
+
