@@ -11,12 +11,7 @@ pygame.display.set_caption('Dino Runner')
 CHAO_Y = HEIGHT - 50
 GRAVIDADE = 0.8
 FPS = 60
-
-CACTO_LARGURA = 20
-cacto_altura = 50
-cacto_vel = 6
-cacto_x = WIDTH
-cacto_y = CHAO_Y - cacto_altura
+CACTO_VEL = 6
 
 fonte = pygame.font.SysFont(None, 36)
 frames = 0
@@ -62,12 +57,33 @@ class Dinossauro(pygame.sprite.Sprite):
         self.rect.bottom = CHAO_Y
 
 
+class Cacto(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        altura = random.randint(40, 70)
+        self.image = pygame.Surface((20, altura))
+        self.image.fill((0, 150, 0))
+        self.rect = self.image.get_rect()
+        self.rect.x = WIDTH
+        self.rect.bottom = CHAO_Y
+
+    def update(self):
+        self.rect.x -= CACTO_VEL
+        if self.rect.right < 0:
+            self.kill()
+
+
 clock = pygame.time.Clock()
 game = True
 
 dino = Dinossauro()
 all_sprites = pygame.sprite.Group()
+all_obstaculos = pygame.sprite.Group()
 all_sprites.add(dino)
+
+cacto = Cacto()
+all_sprites.add(cacto)
+all_obstaculos.add(cacto)
 
 while game:
     clock.tick(FPS)
@@ -86,11 +102,13 @@ while game:
 
     all_sprites.update()
 
-    cacto_x -= cacto_vel
-    if cacto_x + CACTO_LARGURA < 0:
-        cacto_x = WIDTH
-        cacto_altura = random.randint(40, 70)
-        cacto_y = CHAO_Y - cacto_altura
+    if len(all_obstaculos) == 0:
+        cacto = Cacto()
+        all_sprites.add(cacto)
+        all_obstaculos.add(cacto)
+
+    if pygame.sprite.spritecollide(dino, all_obstaculos, False):
+        game = False
 
     frames += 1
     score = frames // 6
@@ -98,7 +116,6 @@ while game:
     window.fill((255, 255, 255))
     pygame.draw.line(window, (0, 0, 0), (0, CHAO_Y), (WIDTH, CHAO_Y), 2)
     all_sprites.draw(window)
-    pygame.draw.rect(window, (0, 150, 0), (cacto_x, cacto_y, CACTO_LARGURA, cacto_altura))
 
     texto = fonte.render('Score: {:05d}'.format(score), True, (0, 0, 0))
     window.blit(texto, (WIDTH - texto.get_width() - 20, 20))
@@ -106,5 +123,3 @@ while game:
     pygame.display.update()
 
 pygame.quit()
-
-
