@@ -1,5 +1,5 @@
 import pygame
-from funcoes import tela_jogo
+from tela_jogo import tela_jogo
 
 pygame.init()
 window = pygame.display.set_mode((800, 400))
