@@ -11,7 +11,11 @@ pygame.display.set_caption('Dino Runner')
 CHAO_Y = HEIGHT - 50
 GRAVIDADE = 0.8
 FPS = 60
+<<<<<<< HEAD
 VELOCIDADE_INICIAL = 6
+=======
+CACTO_VEL = 6
+>>>>>>> c5ea721a38db12191f6d4263587bafed62dea25e
 
 fonte = pygame.font.SysFont(None, 36)
 
@@ -73,6 +77,63 @@ class Cacto(pygame.sprite.Sprite):
             self.kill()
 
 
+
+class Dinossauro(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.agachado = False
+        self.image = pygame.Surface((40, 60))
+        self.image.fill((80, 80, 80))
+        self.rect = self.image.get_rect()
+        self.rect.x = 80
+        self.rect.bottom = CHAO_Y
+        self.vel_y = 0
+        self.no_chao = True
+
+    def update(self):
+        self.vel_y += GRAVIDADE
+        self.rect.bottom += self.vel_y
+        if self.rect.bottom >= CHAO_Y:
+            self.rect.bottom = CHAO_Y
+            self.vel_y = 0
+            self.no_chao = True
+
+    def pular(self):
+        if self.no_chao and not self.agachado:
+            self.vel_y = -15
+            self.no_chao = False
+
+    def agachar(self, ativo):
+        if ativo == self.agachado or not self.no_chao:
+            return
+        self.agachado = ativo
+        antigo_x = self.rect.x
+        if ativo:
+            self.image = pygame.Surface((40, 30))
+        else:
+            self.image = pygame.Surface((40, 60))
+        self.image.fill((80, 80, 80))
+        self.rect = self.image.get_rect()
+        self.rect.x = antigo_x
+        self.rect.bottom = CHAO_Y
+
+
+class Cacto(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        altura = random.randint(40, 70)
+        self.image = pygame.Surface((20, altura))
+        self.image.fill((0, 150, 0))
+        self.rect = self.image.get_rect()
+        self.rect.x = WIDTH
+        self.rect.bottom = CHAO_Y
+
+    def update(self):
+        self.rect.x -= CACTO_VEL
+        if self.rect.right < 0:
+            self.kill()
+
+
 clock = pygame.time.Clock()
 game = True
 
@@ -81,10 +142,14 @@ all_sprites = pygame.sprite.Group()
 all_obstaculos = pygame.sprite.Group()
 all_sprites.add(dino)
 
+<<<<<<< HEAD
 velocidade = VELOCIDADE_INICIAL
 frames = 0
 
 cacto = Cacto(velocidade)
+=======
+cacto = Cacto()
+>>>>>>> c5ea721a38db12191f6d4263587bafed62dea25e
 all_sprites.add(cacto)
 all_obstaculos.add(cacto)
 
@@ -102,11 +167,25 @@ while game:
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_DOWN:
                 dino.agachar(False)
+<<<<<<< HEAD
+=======
+
+    all_sprites.update()
+
+    if len(all_obstaculos) == 0:
+        cacto = Cacto()
+        all_sprites.add(cacto)
+        all_obstaculos.add(cacto)
+
+    if pygame.sprite.spritecollide(dino, all_obstaculos, False):
+        game = False
+>>>>>>> c5ea721a38db12191f6d4263587bafed62dea25e
 
     frames += 1
     score = frames // 6
     velocidade = VELOCIDADE_INICIAL + score // 80
 
+<<<<<<< HEAD
     for obs in all_obstaculos:
         obs.velocidade = velocidade
 
@@ -120,6 +199,8 @@ while game:
     if pygame.sprite.spritecollide(dino, all_obstaculos, False):
         game = False
 
+=======
+>>>>>>> c5ea721a38db12191f6d4263587bafed62dea25e
     window.fill((255, 255, 255))
     pygame.draw.line(window, (0, 0, 0), (0, CHAO_Y), (WIDTH, CHAO_Y), 2)
     all_sprites.draw(window)
