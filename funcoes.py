@@ -233,6 +233,7 @@ velocidade = VELOCIDADE_INICIAL
 frames = 0
 frames_para_proximo = 90
 score = 0
+recorde = 0
 
 rodando = True
 while rodando:
@@ -287,14 +288,17 @@ while rodando:
         if pygame.sprite.spritecollide(dino, all_obstaculos, False, pygame.sprite.collide_mask):
             if assets['som_colisao']:
                 assets['som_colisao'].play()
+            recorde = max(recorde, score)
             estado = MORTO
 
     window.blit(assets['fundo_img'], (0, 0))
     pygame.draw.line(window, (0, 0, 0), (0, CHAO_Y), (WIDTH, CHAO_Y), 2)
     all_sprites.draw(window)
 
-    texto = assets['fonte'].render('Score: {:05d}'.format(score), True, (255, 255, 255))
-    window.blit(texto, (WIDTH - texto.get_width() - 20, 20))
+    texto_score = assets['fonte'].render('Score: {:05d}'.format(score), True, (255, 255, 255))
+    texto_recorde = assets['fonte'].render('Recorde: {:05d}'.format(recorde), True, (255, 255, 0))
+    window.blit(texto_score, (WIDTH - texto_score.get_width() - 20, 20))
+    window.blit(texto_recorde, (WIDTH - texto_recorde.get_width() - 20, 55))
 
     if estado == MORTO:
         msg = assets['fonte'].render('GAME OVER  |  SPACE para reiniciar', True, (255, 0, 0))
