@@ -1,6 +1,6 @@
 import pygame
 import random
-from config import JOGANDO, MORTO, REINICIANDO, VELOCIDADE_INICIAL, FPS, WIDTH, HEIGHT, CHAO_Y
+from config import VELOCIDADE_INICIAL, FPS, WIDTH, HEIGHT, CHAO_Y
 import sprites
 from assets import carregar_assets
 
@@ -15,29 +15,69 @@ def criar_jogo():
     return dino, all_sprites, all_obstaculos
 
 
+def tela_inicio(janela):
+    clock = pygame.time.Clock()
+    while True:
+        clock.tick(FPS)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                return True
+        janela.blit(assets['fundo_img'], (0, 0))
+        msg = assets['fonte'].render('Pressione ESPAÇO para começar', True, (255, 255, 255))
+        janela.blit(msg, (WIDTH // 2 - msg.get_width() // 2, HEIGHT // 2))
+        pygame.display.update()
+
+
+def tela_game_over(janela, pontuacao, recorde):
+    clock = pygame.time.Clock()
+    fonte = assets['fonte']
+    while True:
+        clock.tick(FPS)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                return True
+        janela.blit(assets['fundo_img'], (0, 0))
+        linhas = [
+            (fonte.render('GAME OVER', True, (255, 0, 0)),                           HEIGHT // 2 - 60),
+            (fonte.render('Score: {:05d}'.format(pontuacao), True, (255, 255, 255)), HEIGHT // 2 - 20),
+            (fonte.render('Recorde: {:05d}'.format(recorde), True, (255, 255, 0)),   HEIGHT // 2 + 20),
+            (fonte.render('SPACE para reiniciar', True, (255, 255, 255)),            HEIGHT // 2 + 60),
+        ]
+        for surf, y in linhas:
+            janela.blit(surf, (WIDTH // 2 - surf.get_width() // 2, y))
+        pygame.display.update()
+
+
 def tela_jogo(janela):
     global assets
     sprites.assets = carregar_assets()
     assets = sprites.assets
 
     clock = pygame.time.Clock()
-    estado = JOGANDO
-    dino, all_sprites, all_obstaculos = criar_jogo()
-    velocidade = VELOCIDADE_INICIAL
-    frames = 0
-    frames_para_proximo = 90
-    score = 0
     recorde = 0
 
-    rodando = True
-    while rodando:
-        clock.tick(FPS)
+    if not tela_inicio(janela):
+        return
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                rodando = False
-            if event.type == pygame.KEYDOWN:
-                if estado == JOGANDO:
+    while True:
+        dino, all_sprites, all_obstaculos = criar_jogo()
+        velocidade = VELOCIDADE_INICIAL
+        frames = 0
+        frames_para_proximo = 90
+        score = 0
+
+        while True:
+            clock.tick(FPS)
+
+            quit_game = False
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    quit_game = True
+                if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
                         dino.pular()
                     if event.key == pygame.K_DOWN:
@@ -46,22 +86,13 @@ def tela_jogo(janela):
                             dino.vel_y = 0
                             dino.no_chao = True
                         dino.agachar(True)
-                elif estado == MORTO:
-                    if event.key == pygame.K_SPACE:
-                        estado = REINICIANDO
-            if event.type == pygame.KEYUP and estado == JOGANDO:
-                if event.key == pygame.K_DOWN:
-                    dino.agachar(False)
+                if event.type == pygame.KEYUP:
+                    if event.key == pygame.K_DOWN:
+                        dino.agachar(False)
 
-        if estado == REINICIANDO:
-            dino, all_sprites, all_obstaculos = criar_jogo()
-            velocidade = VELOCIDADE_INICIAL
-            frames = 0
-            frames_para_proximo = 90
-            score = 0
-            estado = JOGANDO
+            if quit_game:
+                return
 
-        if estado == JOGANDO:
             frames += 1
             score = frames // 6
             velocidade = VELOCIDADE_INICIAL + score // 30
@@ -79,23 +110,22 @@ def tela_jogo(janela):
 
             all_sprites.update()
 
+            janela.blit(assets['fundo_img'], (0, 0))
+            pygame.draw.line(janela, (0, 0, 0), (0, CHAO_Y), (WIDTH, CHAO_Y), 2)
+            all_sprites.draw(janela)
+
+            texto_score = assets['fonte'].render('Score: {:05d}'.format(score), True, (255, 255, 255))
+            texto_recorde = assets['fonte'].render('Recorde: {:05d}'.format(recorde), True, (255, 255, 0))
+            janela.blit(texto_score, (WIDTH - texto_score.get_width() - 20, 20))
+            janela.blit(texto_recorde, (WIDTH - texto_recorde.get_width() - 20, 55))
+
+            pygame.display.update()
+
             if pygame.sprite.spritecollide(dino, all_obstaculos, False, pygame.sprite.collide_mask):
                 if assets['som_colisao']:
                     assets['som_colisao'].play()
                 recorde = max(recorde, score)
-                estado = MORTO
+                break
 
-        janela.blit(assets['fundo_img'], (0, 0))
-        pygame.draw.line(janela, (0, 0, 0), (0, CHAO_Y), (WIDTH, CHAO_Y), 2)
-        all_sprites.draw(janela)
-
-        texto_score = assets['fonte'].render('Score: {:05d}'.format(score), True, (255, 255, 255))
-        texto_recorde = assets['fonte'].render('Recorde: {:05d}'.format(recorde), True, (255, 255, 0))
-        janela.blit(texto_score, (WIDTH - texto_score.get_width() - 20, 20))
-        janela.blit(texto_recorde, (WIDTH - texto_recorde.get_width() - 20, 55))
-
-        if estado == MORTO:
-            msg = assets['fonte'].render('GAME OVER  |  SPACE para reiniciar', True, (255, 0, 0))
-            janela.blit(msg, (WIDTH // 2 - msg.get_width() // 2, HEIGHT // 2))
-
-        pygame.display.update()
+        if not tela_game_over(janela, score, recorde):
+            return
