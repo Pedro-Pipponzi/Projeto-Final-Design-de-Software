@@ -15,8 +15,43 @@ def criar_jogo():
     return dino, all_sprites, all_obstaculos
 
 
+def _desenhar_painel(janela, grupos):
+    pad = 24
+    espaco_entre = 10
+    todas = [s for grupo in grupos for s in grupo]
+    separadores = len(grupos) - 1
+
+    box_w = max(s.get_width() for s in todas) + pad * 2
+    box_h = (sum(s.get_height() for s in todas)
+             + espaco_entre * (len(todas) - 1)
+             + separadores * 16
+             + pad * 2)
+    box_x = WIDTH // 2 - box_w // 2
+    box_y = HEIGHT // 2 - box_h // 2
+
+    fundo = pygame.Surface((box_w, box_h), pygame.SRCALPHA)
+    fundo.fill((0, 0, 0, 190))
+    janela.blit(fundo, (box_x, box_y))
+    pygame.draw.rect(janela, (255, 255, 255), (box_x, box_y, box_w, box_h), 2)
+
+    y = box_y + pad
+    for g, grupo in enumerate(grupos):
+        for surf in grupo:
+            janela.blit(surf, (WIDTH // 2 - surf.get_width() // 2, y))
+            y += surf.get_height() + espaco_entre
+        if g < separadores:
+            y += 16
+
+
 def tela_inicio(janela):
     clock = pygame.time.Clock()
+    fonte_hist = pygame.font.SysFont(None, 30)
+    historia = [
+        fonte_hist.render('Você invadiu a terra do ChupaCabra,', True, (220, 220, 220)),
+        fonte_hist.render('roubou seu chapeu e seu bebê Vermelinho.', True, (220, 220, 220)),
+        fonte_hist.render('CORRA', True, (255, 80, 80)),
+    ]
+    instrucao = [assets['fonte'].render('Pressione ESPAÇO para começar', True, (255, 255, 0))]
     while True:
         clock.tick(FPS)
         for event in pygame.event.get():
@@ -25,14 +60,19 @@ def tela_inicio(janela):
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 return True
         janela.blit(assets['fundo_img'], (0, 0))
-        msg = assets['fonte'].render('Pressione ESPAÇO para começar', True, (255, 255, 255))
-        janela.blit(msg, (WIDTH // 2 - msg.get_width() // 2, HEIGHT // 2))
+        _desenhar_painel(janela, [historia, instrucao])
         pygame.display.update()
 
 
 def tela_game_over(janela, pontuacao, recorde):
     clock = pygame.time.Clock()
     fonte = assets['fonte']
+    titulo = [fonte.render('GAME OVER', True, (255, 60, 60))]
+    resultados = [
+        fonte.render('Score: {:05d}'.format(pontuacao), True, (255, 255, 255)),
+        fonte.render('Recorde: {:05d}'.format(recorde), True, (255, 255, 0)),
+    ]
+    instrucao = [fonte.render('SPACE para reiniciar', True, (180, 180, 180))]
     while True:
         clock.tick(FPS)
         for event in pygame.event.get():
@@ -41,14 +81,7 @@ def tela_game_over(janela, pontuacao, recorde):
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 return True
         janela.blit(assets['fundo_img'], (0, 0))
-        linhas = [
-            (fonte.render('GAME OVER', True, (255, 0, 0)),                           HEIGHT // 2 - 60),
-            (fonte.render('Score: {:05d}'.format(pontuacao), True, (255, 255, 255)), HEIGHT // 2 - 20),
-            (fonte.render('Recorde: {:05d}'.format(recorde), True, (255, 255, 0)),   HEIGHT // 2 + 20),
-            (fonte.render('SPACE para reiniciar', True, (255, 255, 255)),            HEIGHT // 2 + 60),
-        ]
-        for surf, y in linhas:
-            janela.blit(surf, (WIDTH // 2 - surf.get_width() // 2, y))
+        _desenhar_painel(janela, [titulo, resultados, instrucao])
         pygame.display.update()
 
 
