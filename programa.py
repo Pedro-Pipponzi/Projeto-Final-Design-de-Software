@@ -3,6 +3,6 @@ from tela_jogo import tela_jogo
 
 pygame.init()
 window = pygame.display.set_mode((800, 400))
-pygame.display.set_caption('Dino Runner')
+pygame.display.set_caption('Devil Runner')
 tela_jogo(window)
 pygame.quit()
